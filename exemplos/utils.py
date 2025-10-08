@@ -3,9 +3,20 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import pandas as pd
-from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import precision_recall_curve, auc, roc_auc_score, roc_curve
 import plotly.express as px
 from sklearn.metrics import precision_recall_curve
+import torch
+
+def get_class_weights(num_classes, df, y_train, int_to_label, device):
+    if num_classes > 2:
+        weights = 1 / (torch.bincount(torch.tensor(y_train)) / len(y_train)).to(device)
+        print(f"Class Weights:")
+        for i, weight in enumerate(weights):
+            print(f"  - Class '{int_to_label[i]}': {weight:.2f}")
+    else:
+        weights = torch.tensor([df['label'].value_counts()[0] / df['label'].value_counts()[1]]).to(device)
+        print(weights)
 
 def plot_sample_images(df, IMAGE_DIR):
   unique_df = df.groupby('diagnostic').sample(n=1, random_state=16).reset_index(drop=True)
@@ -118,4 +129,52 @@ def plot_precision_recall_iterative(y_test, y_probs):
         legend=dict(x=0.01, y=0.01, xanchor="left", yanchor="bottom")
     )
 
+    fig.show()
+
+def plot_interactive_roc_curve(y_true, y_probs, title='Curva ROC'):
+    # 1. Calculate the ROC curve values
+    fpr, tpr, thresholds = roc_curve(y_true, y_probs)
+    
+    # 2. Calculate the Area Under the Curve (AUC)
+    roc_auc = roc_auc_score(y_true, y_probs)
+    
+    # 3. Create a DataFrame for Plotly
+    # The thresholds array is usually one element longer than needed, so we trim it.
+    roc_df = pd.DataFrame({
+        'fpr': fpr,
+        'tpr': tpr,
+        # We add a placeholder for the first threshold, as roc_curve doesn't provide it
+        'thresholds': np.concatenate(([1.0], thresholds[1:])) 
+    })
+    
+    # 4. Create the interactive plot
+    fig = px.line(
+        roc_df,
+        x='fpr',
+        y='tpr',
+        hover_data=['thresholds']
+    )
+    
+    fig.add_shape(
+        type='line',
+        line=dict(dash='dash', color='RoyalBlue'),
+        x0=0, y0=0, x1=1, y1=1
+    )
+    
+    fig.update_traces(hovertemplate=(
+        '<b>FPR</b>: %{x:.3f}<br>'
+        '<b>TPR (Recall)</b>: %{y:.3f}<br>'
+        '<b>Threshold</b>: %{customdata[0]:.3f}'
+        '<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        title=f'<b>{title} (AUC = {roc_auc:.3f})</b>',
+        xaxis_title='False Positive Rate (FPR)',
+        yaxis_title='True Positive Rate (TPR / Recall)',
+        xaxis=dict(range=[0, 1.01]),
+        yaxis=dict(range=[0, 1.01]),
+        showlegend=False
+    )
+    
     fig.show()
