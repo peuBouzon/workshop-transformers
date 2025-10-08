@@ -31,7 +31,7 @@ class Trainer:
 		model.load_state_dict(torch.load(self.save_name))
 		report = classification_report(
 			val_labels,
-			val_preds,
+			val_preds > threshold if not self.is_multiclass else val_preds,
 			target_names=[int_to_label[i] for i in range(num_classes)],
 			zero_division=0
 		)
