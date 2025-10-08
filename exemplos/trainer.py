@@ -3,8 +3,9 @@ import torch.nn as nn
 from sklearn.metrics import classification_report, recall_score
 
 class Trainer:
-  def __init__(self, device):
+  def __init__(self, device, has_mask=True):
     self.device = device
+    self.has_mask = has_mask
     self.criterion = nn.CrossEntropyLoss()
 
   def fit(self, model, learning_rate, max_epochs, weights, train_loader, val_loader, num_classes, int_to_label):
@@ -30,13 +31,18 @@ class Trainer:
       model.train()
       epoch_loss = 0
       for batch in iterator:
-          ids, mask, label = batch['ids'].to(self.device), batch['mask'].to(self.device), batch['label'].to(self.device)
-          optimizer.zero_grad()
-          output = model(ids, mask)
-          loss = criterion(output, label)
-          loss.backward()
-          optimizer.step()
-          epoch_loss += loss.item()
+        mask = None
+        if self.has_mask:
+            x, label, mask = batch['x'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
+        else:
+            x, label = batch['x'].to(self.device), batch['label'].to(self.device)
+
+        optimizer.zero_grad()
+        output = model(x, mask)
+        loss = criterion(output, label)
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item()
       return epoch_loss / len(iterator)
 
   def evaluate(self, model, iterator):
@@ -45,12 +51,16 @@ class Trainer:
       all_preds, all_labels = [], []
       with torch.no_grad():
           for batch in iterator:
-              ids, mask, label = batch['ids'].to(self.device), batch['mask'].to(self.device), batch['label'].to(self.device)
-              output = model(ids, mask)
-              loss = self.criterion(output, label)
-              epoch_loss += loss.item()
-              preds = torch.argmax(output, dim=1)
-              all_preds.extend(preds.cpu().numpy())
-              all_labels.extend(label.cpu().numpy())
+            mask = None
+            if self.has_mask:
+                x, label, mask = batch['x'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
+            else:
+                x, label = batch['x'].to(self.device), batch['label'].to(self.device)
+            output = model(x, mask)
+            loss = self.criterion(output, label)
+            epoch_loss += loss.item()
+            preds = torch.argmax(output, dim=1)
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(label.cpu().numpy())
       recall = recall_score(all_labels, all_preds, average='macro')
       return epoch_loss / len(iterator), recall, all_preds, all_labels
