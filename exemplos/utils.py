@@ -44,7 +44,7 @@ def plot_sample_images(df, IMAGE_DIR):
       fontweight='bold',
       y=0.98
   )
-  plt.tight_layout(rect=[0, 0, 1, 1]) # Adjust rect to make space for suptitle
+  plt.tight_layout(rect=[0, 0, 1, 1])
   plt.show()
 
 
@@ -63,7 +63,7 @@ def plot_precision_recall_curve(preds, labels, min_recall=0.8):
     plt.annotate(
         f'Precision = {target_precision:.2f}\nRecall = {target_recall_actual:.2f}\nThreshold = {target_threshold:.5f}',
         xy=(target_recall_actual, target_precision),
-        xytext=(target_recall_actual + 0.05, target_precision - 0.15), # Adjusted text position
+        xytext=(target_recall_actual + 0.05, target_precision - 0.15),
         arrowprops=dict(facecolor='black', shrink=0.05, width=1.5, headwidth=8),
         fontsize=12,
         bbox=dict(boxstyle="round,pad=0.3", fc="yellow", ec="black", lw=1, alpha=0.4)
@@ -88,14 +88,13 @@ def plot_precision_recall_iterative(y_test, y_probs):
         'threshold': thresholds
     })
 
-    # 6. Create the interactive plot with Plotly Express
     fig = px.line(
         pr_df,
         x='recall',
         y='precision',
         title='Curva Precision-Recall',
         labels={'recall': 'Recall', 'precision': 'Precision'},
-        hover_data=['threshold'] # Add threshold to the hover data
+        hover_data=['threshold']
     )
 
     fig.update_traces(hovertemplate=(
@@ -113,12 +112,10 @@ def plot_precision_recall_iterative(y_test, y_probs):
         name='No Skill'
     )
 
-    # Update layout for a professional look
     fig.update_layout(
         xaxis_range=[0, 1.01],
         yaxis_range=[0, 1.05],
         legend=dict(x=0.01, y=0.01, xanchor="left", yanchor="bottom")
     )
 
-    # Show the interactive plot
     fig.show()
