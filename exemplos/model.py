@@ -1,3 +1,4 @@
+from einops import rearrange
 import torch
 import torch.nn as nn
 
@@ -64,3 +65,20 @@ class TransformerEncoderBlock(nn.Module):
         x = self.norm1(x + self.dropout(attn_output))
         ff_output = self.ff(x)
         return self.norm2(x + self.dropout(ff_output))
+    
+class PatchEmbedding(nn.Module):
+    def __init__(self, image_size, patch_size, in_channels, d_model):
+        super().__init__()
+        self.patch_size = patch_size
+        self.num_patches = (image_size // patch_size) ** 2
+
+        patch_vector_dim = patch_size * patch_size * in_channels
+        
+        self.projection = nn.Linear(patch_vector_dim, d_model)
+
+    def forward(self, x):
+        # x shape: [batch_size, in_channels, height, width]
+        x = rearrange(x, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', 
+                      p1=self.patch_size, p2=self.patch_size)
+
+        return self.projection(x)

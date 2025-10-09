@@ -18,18 +18,20 @@ class Trainer:
 		self.criterion = nn.CrossEntropyLoss(weight=weights) if num_classes > 2 else nn.BCEWithLogitsLoss(weight=weights)
 		print("\nStarting training...")
 		self.min_loss = float('inf')
+		best_epoch = 0
 		for epoch in range(max_epochs):
 			train_loss = self._train_epoch(model, train_loader, optimizer, self.criterion)
 			val_loss, val_recall, val_precision, val_fpr, _, _ = self.evaluate(model, val_loader, threshold)
 			if val_loss < self.min_loss:
+				best_epoch = epoch + 1
 				self.min_loss = val_loss
 				torch.save(model.state_dict(), f'{self.save_name}')
 			print(f"Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Val. Loss: {val_loss:.3f} | Val. Recall: {val_recall*100:.2f}% | Val. Precision: {val_precision*100:.2f}% | Val. FPR: {val_fpr*100:.2f}%")
 
-		_, _, _, _, val_preds, val_labels = self.evaluate(model, val_loader, threshold)
 
-		print('Carregando o melhor modelo salvo...')
+		print(f'Carregando o melhor modelo salvo (época: {best_epoch})...')
 		model.load_state_dict(torch.load(self.save_name))
+		_, _, _, _, val_preds, val_labels = self.evaluate(model, val_loader, threshold)
 		report = classification_report(
 			val_labels,
 			val_preds > threshold if not self.is_multiclass else val_preds,
@@ -42,14 +44,8 @@ class Trainer:
 		model.train()
 		epoch_loss = 0
 		for batch in iterator:
-			mask = None
-			if self.has_mask:
-				x, label, mask = batch['x'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
-			else:
-				x, label = batch['x'].to(self.device), batch['label'].to(self.device)
-
+			output, label = self.get_logits_targets(model, batch)
 			optimizer.zero_grad()
-			output = model(x, mask)
 			output = output.squeeze(-1) if not self.is_multiclass else output
 			loss = criterion(output, label.float() if not self.is_multiclass else label)
 			loss.backward()
@@ -66,12 +62,7 @@ class Trainer:
 		all_preds, all_labels = [], []
 		with torch.no_grad():
 			for batch in iterator:
-				mask = None
-				if self.has_mask:
-					x, label, mask = batch['x'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
-				else:
-					x, label = batch['x'].to(self.device), batch['label'].to(self.device)
-				output = model(x, mask)
+				output, label = self.get_logits_targets(model, batch)
 				output = output.squeeze(-1) if not self.is_multiclass else output
 				loss = self.criterion(output, label.float() if not self.is_multiclass else label)
 				epoch_loss += loss.item()
@@ -81,9 +72,21 @@ class Trainer:
 		all_preds = np.array(all_preds)
 		all_labels = np.array(all_labels)
 
-		preds = all_preds > threshold if not self.is_multiclass else all_preds
+		preds = (all_preds > threshold).astype(int) if not self.is_multiclass else all_preds
 		recall = recall_score(all_labels, preds, average='macro' if self.is_multiclass else 'binary', zero_division=0)
 		precision = precision_score(all_labels, preds, average='macro' if self.is_multiclass else 'binary', zero_division=0)
 		fpr = 1 - specificity_score(all_labels, preds, average='macro' if self.is_multiclass else 'binary')
 
 		return epoch_loss / len(iterator), recall, precision, fpr, all_preds, all_labels
+
+	def get_logits_targets(self, model, batch):
+		if self.has_mask: # MiniBERT
+			x, label, mask = batch['x'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
+			return model(x, mask), label
+		else:
+			try: # MiniViT
+				x, label = batch['x'].to(self.device), batch['label'].to(self.device)
+				return model(x), label
+			except: # MultiModal
+				text, image, label = batch['text'].to(self.device), batch['image'].to(self.device), batch['label'].to(self.device)
+				return model(text, image), label
