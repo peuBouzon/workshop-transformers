@@ -7,16 +7,43 @@ from sklearn.metrics import precision_recall_curve, auc, roc_auc_score, roc_curv
 import plotly.express as px
 from sklearn.metrics import precision_recall_curve
 import torch
+import seaborn as sns
 
 def get_class_weights(num_classes, df, y_train, int_to_label, device):
     if num_classes > 2:
         weights = 1 / (torch.bincount(torch.tensor(y_train)) / len(y_train)).to(device)
-        print(f"Class Weights:")
+        print(f"Peso da classe:")
         for i, weight in enumerate(weights):
-            print(f"  - Class '{int_to_label[i]}': {weight:.2f}")
+            print(f"'{int_to_label[i]}': {weight:.2f}")
     else:
         weights = torch.tensor([df['label'].value_counts()[0] / df['label'].value_counts()[1]]).to(device)
         print(weights)
+
+
+def plot_class_distribution(original_df, label_col='diagnostic', map_label_names=None):
+    plt.figure(figsize=(7, 5))
+
+    df = original_df.copy()
+    if map_label_names:
+        df[label_col] =  df[label_col].map(map_label_names)
+
+    ax = sns.countplot(x=label_col, data=df, hue=label_col, palette='viridis', legend=False)
+
+    plt.title('Distribuição de classes', fontsize=16)
+    plt.xlabel('', fontsize=12)
+    plt.ylabel('Quantidade', fontsize=12)
+    plt.xticks(rotation=60)
+
+    for p in ax.patches:
+        ax.annotate(f'{p.get_height()}',
+                    (p.get_x() + p.get_width() / 2., p.get_height() - 8),
+                    ha='center',
+                    va='center',
+                    xytext=(0, 5),
+                    textcoords='offset points')
+
+    plt.tight_layout()
+    plt.show()
 
 def plot_sample_images(df, IMAGE_DIR):
   unique_df = df.groupby('diagnostic').sample(n=1, random_state=16).reset_index(drop=True)
