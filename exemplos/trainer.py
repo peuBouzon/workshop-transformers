@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.metrics import classification_report, recall_score, precision_score
 from imblearn.metrics import specificity_score
 
+# Trainer for BERT and ViT models
 class Trainer:
 	def __init__(self, device, save_name, num_classes, weights, has_mask=True):
 		self.device = device
@@ -16,7 +17,7 @@ class Trainer:
 		self.is_multiclass = True if num_classes > 2 else False
 		optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9)
 		self.criterion = nn.CrossEntropyLoss(weight=weights) if num_classes > 2 else nn.BCEWithLogitsLoss(weight=weights)
-		print("\nStarting training...")
+		print("\nIniciando Treinamento...")
 		self.min_loss = float('inf')
 		best_epoch = 0
 		for epoch in range(max_epochs):
@@ -26,19 +27,9 @@ class Trainer:
 				best_epoch = epoch + 1
 				self.min_loss = val_loss
 				torch.save(model.state_dict(), f'{self.save_name}')
-			print(f"Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Val. Loss: {val_loss:.3f} | Val. Recall: {val_recall*100:.2f}% | Val. Precision: {val_precision*100:.2f}% | Val. FPR: {val_fpr*100:.2f}%")
+			print(f"Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Val. Loss: {val_loss:.3f} | Val. Recall: {val_recall*100:.2f}% | Val. FPR: {val_fpr*100:.2f}%")
 
-
-		print(f'Carregando o melhor modelo salvo (época: {best_epoch})...')
 		model.load_state_dict(torch.load(self.save_name))
-		_, _, _, _, val_preds, val_labels = self.evaluate(model, val_loader, threshold)
-		report = classification_report(
-			val_labels,
-			val_preds > threshold if not self.is_multiclass else val_preds,
-			target_names=[int_to_label[i] for i in range(num_classes)],
-			zero_division=0
-		)
-		print(report)
 
 	def _train_epoch(self, model, iterator, optimizer, criterion):
 		model.train()
@@ -81,11 +72,11 @@ class Trainer:
 
 	def get_logits_targets(self, model, batch):
 		if self.has_mask: # MiniBERT
-			x, label, mask = batch['x'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
+			x, label, mask = batch['text'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
 			return model(x, mask), label
 		else:
 			try: # MiniViT
-				x, label = batch['x'].to(self.device), batch['label'].to(self.device)
+				x, label = batch['image'].to(self.device), batch['label'].to(self.device)
 				return model(x), label
 			except: # MultiModal
 				text, image, label = batch['text'].to(self.device), batch['image'].to(self.device), batch['label'].to(self.device)
