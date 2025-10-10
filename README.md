@@ -88,8 +88,8 @@ Os notebooks são independentes, mas recomendados na ordem apresentada para acom
 
 ## Exemplos aplicados (`exemplos/`)
 - **Mini BERT para anamnese** (`1-mini_bert_anamnese.ipynb`): pipeline completo de carregamento de dados, tokenização, treinamento e avaliação de um modelo textual. O script `trainer.py` abstrai o laço de treino e já calcula métricas como *recall*, *precision* e *specificity*.
-- **Mini Vision Transformer** (`2-mini_vit.ipynb`): demonstra como adaptar a arquitetura Transformer para visão computacional usando embeddings de patches. Inclui funções utilitárias para visualizar distribuições de classes e curvas ROC/PR.
-- **Desafio multimodal** (`3-desafio_multimodal*.ipynb`): reúne sinal de texto e imagem para explorar cenários onde múltiplas modalidades se complementam.
+- **Mini Vision Transformer** (`2-mini_vit.ipynb`): demonstra como adaptar a arquitetura Transformer para visão computacional usando embeddings de patches. Inclui funções utilitárias para visualizar distribuições de classes e curvas ROC/PR. O dataset de lesões de pele pode ser encontrado em https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/zr7vgbcyr2-1.zip.
+- **Desafio multimodal** (`3-desafio_multimodal*.ipynb`): reúne tokens de texto e imagem para explorar cenários onde múltiplas modalidades se complementam.
 
 ## Dados de exemplo
 A pasta `exemplos/data/` contém pequenos datasets como `skincancer.csv` e `transcription.csv`, utilizados para as demonstrações. São amostras sintéticas ou reduzidas, adequadas para fins educacionais. Ajuste o caminho dos arquivos caso deseje substituir pelos seus próprios dados.
