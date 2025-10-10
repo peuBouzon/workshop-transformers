@@ -50,22 +50,32 @@ Este repositório reúne o material utilizado em um workshop de introdução à 
    git clone https://github.com/peuBouzon/workshop-transformers.git
    cd workshop-transformers
    ```
-2. **Crie e ative um ambiente virtual (opcional, mas recomendado)**
+2. **Crie e ative um ambiente com as dependências do `requirements.txt`**
+
+   > Escolha a abordagem que preferir. As duas alternativas abaixo usam o mesmo arquivo `requirements.txt` presente na raiz do projeto.
+
+   ### Opção A — Conda
+   ```bash
+   conda create -n workshop-transformers python=3.10 -y
+   conda activate workshop-transformers
+   pip install -r requirements.txt
+   ```
+
+   ### Opção B — Ambiente virtual (`venv`)
    ```bash
    python -m venv .venv
-   source .venv/bin/activate
+   source .venv/bin/activate  # No Windows use: .venv\Scripts\activate
+   pip install --upgrade pip
+   pip install -r requirements.txt
    ```
-3. **Instale as dependências principais**
-   ```bash
-   pip install jupyter torch torchvision numpy pandas matplotlib seaborn plotly scikit-learn imbalanced-learn einops
-   ```
-4. **Inicie o Jupyter Notebook ou VS Code**
+
+3. **Inicie o Jupyter Notebook ou VS Code**
    ```bash
    jupyter lab
    # ou
    jupyter notebook
    ```
-5. **Abra os notebooks em `blocks/` e siga as instruções do workshop.**
+4. **Abra os notebooks em `blocks/` e siga as instruções do workshop.**
 
 ## Notebooks didáticos (`blocks/`)
 Cada notebook aborda um componente fundamental do Transformer:

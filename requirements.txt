@@ -244,8 +244,6 @@ pygam==0.9.1
 Pygments==2.18.0
 pyparsing==3.1.2
 pypickle==1.1.0
-pyro-api==0.1.2
-pyro-ppl==1.8.4
 pytest==8.2.2
 pytest-shutil==1.7.0
 python-dateutil==2.9.0.post0
