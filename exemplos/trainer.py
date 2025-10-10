@@ -6,12 +6,13 @@ from imblearn.metrics import specificity_score
 
 # Trainer for BERT and ViT models
 class Trainer:
-	def __init__(self, device, save_name, num_classes, weights, has_mask=True):
+	def __init__(self, device, save_name, num_classes, weights, has_mask=True, get_logits_targets_fn=None):
 		self.device = device
 		self.has_mask = has_mask
 		self.criterion = nn.CrossEntropyLoss(weight=weights) if num_classes > 2 else nn.BCEWithLogitsLoss(weight=weights)
 		self.save_name = save_name
 		self.is_multiclass = True if num_classes > 2 else False
+		self.get_logits_targets = get_logits_targets_fn if get_logits_targets_fn else self.get_logits_targets
 
 	def fit(self, model, learning_rate, max_epochs, weights, train_loader, val_loader, num_classes, int_to_label, threshold=0.5):
 		self.is_multiclass = True if num_classes > 2 else False
@@ -72,10 +73,6 @@ class Trainer:
 		if self.has_mask: # MiniBERT
 			x, label, mask = batch['text'].to(self.device), batch['label'].to(self.device), batch['mask'].to(self.device) 
 			return model(x, mask), label
-		else:
-			try: # MiniViT
-				x, label = batch['image'].to(self.device), batch['label'].to(self.device)
-				return model(x), label
-			except: # MultiModal
-				text, image, label = batch['text'].to(self.device), batch['image'].to(self.device), batch['label'].to(self.device)
-				return model(text, image), label
+		else: # ViT
+			x, label = batch['image'].to(self.device), batch['label'].to(self.device)
+			return model(x), label
