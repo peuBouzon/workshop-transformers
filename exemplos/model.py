@@ -65,7 +65,26 @@ class TransformerEncoderBlock(nn.Module):
         x = self.norm1(x + self.dropout(attn_output))
         ff_output = self.ff(x)
         return self.norm2(x + self.dropout(ff_output))
-    
+
+# ViT
+class PreNormTransformerEncoderBlock(nn.Module):
+    def __init__(self, d_model, n_heads, ff_dim, dropout):
+        super().__init__()
+        self.attention = MultiHeadAttention(d_model, n_heads, dropout)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.mlp = FeedForward(d_model, ff_dim, dropout)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, mask=None):
+        attn_output = self.attention(self.norm1(x), mask)
+        x = x + self.dropout(attn_output)
+
+        ff_output = self.mlp(self.norm2(x))
+        x = x + self.dropout(ff_output)
+
+        return x
+
 class PatchEmbedding(nn.Module):
     def __init__(self, image_size, patch_size, in_channels, d_model):
         super().__init__()
