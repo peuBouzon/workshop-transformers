@@ -96,8 +96,3 @@ A pasta `exemplos/data/` contém pequenos datasets como `skincancer.csv` e `tran
 
 ## Materiais de apoio
 - A pasta `blocks/figures/` concentra ilustrações (atenção, dropout, tokenização, etc.) que complementam os notebooks.
-
-## Próximos passos sugeridos
-- Atualizar `requirements.txt` com versões fixadas para facilitar a instalação reprodutível.
-
-PS: Este README foi gerado automaticamente, qualquer problema abra uma issue no repositório que respondo.
