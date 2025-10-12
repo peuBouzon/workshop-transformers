@@ -35,7 +35,7 @@ Este repositório reúne o material utilizado em um workshop de introdução à 
 ## Requisitos
 - Python 3.10 ou superior.
 - Biblioteca Jupyter (Notebook ou Lab) para executar os arquivos `.ipynb`.
-- Pacotes científicos principais:
+- Pacotes principais:
   - `torch`, `torchvision` (para os modelos e treinamento)
   - `numpy`, `pandas`
   - `matplotlib`, `seaborn`, `plotly`
