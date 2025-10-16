@@ -159,22 +159,16 @@ def plot_precision_recall_iterative(y_test, y_probs):
     fig.show()
 
 def plot_interactive_roc_curve(y_true, y_probs, title='Curva ROC'):
-    # 1. Calculate the ROC curve values
     fpr, tpr, thresholds = roc_curve(y_true, y_probs)
     
-    # 2. Calculate the Area Under the Curve (AUC)
     roc_auc = roc_auc_score(y_true, y_probs)
     
-    # 3. Create a DataFrame for Plotly
-    # The thresholds array is usually one element longer than needed, so we trim it.
     roc_df = pd.DataFrame({
         'fpr': fpr,
         'tpr': tpr,
-        # We add a placeholder for the first threshold, as roc_curve doesn't provide it
         'thresholds': np.concatenate(([1.0], thresholds[1:])) 
     })
     
-    # 4. Create the interactive plot
     fig = px.line(
         roc_df,
         x='fpr',
